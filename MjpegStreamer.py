@@ -1,17 +1,25 @@
-import http.server
-import socketserver
+from BaseHTTPServer import BaseHTTPRequestHandler
+import SocketServer
 import os
 import shutil
 import time
+import numpy as np
+import cv2
+import httplib
 
 PORT = 8080
 
-class MjpegServerHandler(http.server.BaseHTTPRequestHandler):
+class MjpegServerHandler(BaseHTTPRequestHandler):
+
+	def capture_image(self):
+		cap = cv2.VideoCapture(0)
+
 	def do_GET(self):
+		cap = cv2.VideoCapture(0)
 		path = "c:\\dev\\web_dev\\simple_project\\images\\"
 		
 		try:
-			self.send_response(200)
+			self.send_response(httplib.OK)
 			self.send_header("Content-type", "multipart/x-mixed-replace;boundary=123")
 			self.end_headers()
 			i = 1
@@ -21,7 +29,7 @@ class MjpegServerHandler(http.server.BaseHTTPRequestHandler):
 					fs = os.fstat(f.fileno())
 				except OSError:
 					raise
-				self.wfile.write(bytes("--123","utf-8"))
+				self.wfile.write("--123")
 				self.send_header("Content-type", "image/jpeg")
 				self.send_header("Content-Length", str(fs[6]))
 				self.end_headers()
@@ -35,7 +43,7 @@ class MjpegServerHandler(http.server.BaseHTTPRequestHandler):
 			raise
 
 Handler = MjpegServerHandler
-httpd = socketserver.TCPServer(("127.0.0.1", PORT), Handler)
+httpd = SocketServer.TCPServer(("127.0.0.1", PORT), Handler)
 
-print("server at port", PORT)
+print "server at port", PORT
 httpd.serve_forever()
